@@ -241,5 +241,3 @@ MIT License
 ## Summary
 
 This project demonstrates practical ML inference in legacy Java systems. The approach prioritizes simplicity: no microservices, no network calls, no operational overhead. Just a JAR dependency and an embedded model file delivering sub-millisecond predictions.
-
-This project demonstrates practical ML inference in legacy Java systems. The approach prioritizes simplicity: no microservices, no network calls, no operational overhead. Just a JAR dependency and an embedded model file delivering sub-millisecond predictions.
