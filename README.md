@@ -1,229 +1,245 @@
 # Java Embedded ML
 
-> **Zero-Overhead AI Inference in Legacy Java Applications**
+**Zero-Overhead AI Inference in Legacy Java Applications**
 
-## 🎯 Project Overview
+## Overview
 
-This project demonstrates how to embed a Python-trained machine learning model directly into a monolithic Java application, eliminating all network and microservice overhead. 
+This project demonstrates embedding a Python-trained machine learning model directly into a Java 11 monolithic application. The model runs in-process with sub-millisecond inference latency, eliminating network overhead and external service dependencies.
 
-**The Big Idea:** Why deploy a separate ML server and add network latency when you can run AI inference *inside* your existing Java monolith? This is the ultimate low-overhead solution for adding AI capabilities to legacy systems.
+### Key Features
 
-### Key Benefits
-
-- ✅ **Zero Network Latency** - Direct Java method calls, no HTTP/gRPC overhead
-- ✅ **Zero Architectural Overhead** - No new microservices to deploy or manage
-- ✅ **Minimal Dependencies** - ML as a simple library, not a new stack
-- ✅ **High Performance** - Powered by ONNX Runtime's C++ backend
-- ✅ **Clean MLOps Handoff** - Data scientists train in Python, developers serve in Java
+- **Sub-millisecond Inference** - Direct Java method calls with latency under 1ms
+- **Zero Network Overhead** - No HTTP/gRPC calls, no microservices
+- **Embedded Model** - ONNX model packaged inside the application JAR
+- **Legacy Compatible** - Runs on Java 11, suitable for legacy enterprise systems
+- **Simple Integration** - Model as a resource, loaded at startup
 
 ---
 
-## 🏗️ Architecture
+## Prerequisites
 
-```
-┌─────────────────────────────────────────────────────────┐
-│         Legacy Java Monolith (JDK 11)                   │
-│                                                           │
-│  ┌──────────────┐      ┌─────────────────┐             │
-│  │   Business   │──────▶│  Prediction     │             │
-│  │    Logic     │       │   Service       │             │
-│  │  (Javalin)   │       │   (DJL +        │             │
-│  │              │       │  ONNX Runtime)  │             │
-│  └──────────────┘      └─────────────────┘             │
-│         │                       │                        │
-│         │                       ▼                        │
-│         │              ┌─────────────────┐              │
-│         │              │   model.onnx    │              │
-│         │              │ (Embedded in    │              │
-│         │              │  JAR resources) │              │
-│         │              └─────────────────┘              │
-└─────────────────────────────────────────────────────────┘
-         │
-         ▼
-    Direct Method Call
-    (No network latency!)
-```
+- Java JDK 11 (or above)
+- Apache Maven 3.6+
+- Python 3.7+ (for model training only)
+- API testing tool (Postman, cURL, or similar)
 
 ---
 
-## 🚀 Quick Start
+## Build and Run
 
-### Prerequisites
-
-- **Java JDK 11** (emulates legacy Java systems)
-- **Maven 3.6+**
-- **Python 3.7+** (for model training only)
-- **Postman or cURL** (for testing the API)
-
-### Step 1: Train and Export the Model
+### 1. Train and Export Model
 
 ```bash
-cd model-training
-pip install scikit-learn onnx skl2onnx
 python create_model.py
 ```
 
-This creates `model.onnx` in the `java-legacy-app/src/main/resources/` directory.
+Generates `model.onnx` and places it in `java-legacy-app/src/main/resources/`.
 
-### Step 2: Build the Application
+### 2. Build Application
 
 ```bash
-cd ../java-legacy-app
+cd java-legacy-app
 mvn clean package
 ```
 
-This compiles the Java code and packages `model.onnx` inside the final JAR file.
-
-### Step 3: Run the Application
+### 3. Run Application
 
 ```bash
-java -jar target/embedded-ml-monolith-1.0-SNAPSHOT.jar
+java -jar target/java-embedded-ml-1.0-SNAPSHOT.jar
 ```
 
-The server starts on `http://localhost:7070`
+Server starts at `http://localhost:7070`
 
 ---
 
-## 🧪 Testing the Prediction Service
+## API Endpoints
 
-Use **Postman**, **cURL**, or any API testing tool to test the `/predict` endpoint.
+### POST `/predict`
 
-### Example Request (cURL)
+Classify iris flower based on measurements.
 
+**Request Body:**
+```json
+{
+  "sepal_length": 5.1,
+  "sepal_width": 3.5,
+  "petal_length": 1.4,
+  "petal_width": 0.2
+}
+```
+
+**Expected Response:**
+```json
+{
+  "input": {
+    "sepal_length": 5.1,
+    "sepal_width": 3.5,
+    "petal_length": 1.4,
+    "petal_width": 0.2
+  },
+  "predicted_class": 0,
+  "species": "Iris-setosa",
+  "latency_ms": "0.847"
+}
+```
+
+**cURL Example:**
 ```bash
 curl -X POST http://localhost:7070/predict \
   -H "Content-Type: application/json" \
-  -d '[1.5, 2.3, 3.1, 4.0]'
+  -d '{"sepal_length":5.1,"sepal_width":3.5,"petal_length":1.4,"petal_width":0.2}'
 ```
-
-### Example Request (Postman)
-
-- **Method:** POST
-- **URL:** `http://localhost:7070/predict`
-- **Headers:** `Content-Type: application/json`
-- **Body (raw JSON):**
-  ```json
-  [1.5, 2.3, 3.1, 4.0]
-  ```
-
-### Expected Response
-
-```json
-[0.7234, 0.2766]
-```
-
-The response is a probability distribution (or prediction output) from the embedded ML model.
 
 ---
 
-## 📂 Project Structure
+## GET `/health`
+Check service status and model information.
+
+## GET `/test`
+Run test with known samples.
+
+
+---
+
+## Testing with Postman
+
+1. **Create POST Request**
+   - URL: `http://localhost:7070/predict`
+   - Method: POST
+   - Headers: `Content-Type: application/json`
+
+2. **Set Request Body**
+   ```json
+   {
+     "sepal_length": 6.7,
+     "sepal_width": 3.0,
+     "petal_length": 5.0,
+     "petal_width": 1.7
+   }
+   ```
+
+3. **Send Request**
+   - Expected: `"species": "Iris-versicolor"`
+
+4. **Test Health Endpoint**
+   - URL: `http://localhost:7070/health`
+   - Method: GET
+
+---
+
+## Project Structure
 
 ```
-embedded-ml-monolith/
-├── model-training/
-│   └── create_model.py          # Python script to train and export model
+JAVA_EMBEDDED_ML/
 ├── java-legacy-app/
-│   ├── pom.xml                  # Maven dependencies (DJL, ONNX, Javalin)
-│   └── src/main/
-│       ├── java/com/demo/
-│       │   ├── App.java                    # Main class, starts server
-│       │   ├── PredictionService.java      # Loads and manages ML model
-│       │   └── PredictionHandler.java      # Handles HTTP requests
-│       └── resources/
-│           └── model.onnx       # ML model embedded in JAR
-└── README.md
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/demo/
+│   │   │   │   ├── App.java                    # Main application, HTTP routes
+│   │   │   │   ├── PredictionService.java      # Model loader and predictor
+│   │   │   │   └── SimpleOnnxTranslator.java   # DJL translator for ONNX
+│   │   │   └── resources/
+│   │   │       └── model.onnx                  # Embedded ML model
+│   │   └── test/java/com/demo/
+│   │       └── PredictionServiceTest.java      # Unit tests
+│   └── pom.xml                                 # Maven dependencies
+├── create_model.py                             # Python training script
+├── IRIS.csv                                    # Training dataset
+├── README.md
+├── requirements.txt
+└── .gitignore
 ```
 
 ---
 
-## 🔧 Technology Stack
+## Technology Stack
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| **ML Inference Engine** | Deep Java Library (DJL) + ONNX Runtime | High-performance model execution in Java |
-| **Legacy App Simulator** | Javalin | Lightweight web framework (no Spring overhead) |
-| **Build Tool** | Apache Maven | Dependency management and JAR packaging |
+| **Inference Engine** | Deep Java Library (DJL) | Java ML framework |
+| **Runtime** | ONNX Runtime | High-performance C++ inference backend |
+| **Web Server** | Javalin | Lightweight HTTP server |
+| **Build Tool** | Maven | Dependency management and packaging |
 | **Model Format** | ONNX | Universal ML model format |
-| **Target Runtime** | Java JDK 11 | Emulates legacy enterprise Java systems |
+| **Training** | Python + scikit-learn | Model development |
 
 ---
 
-## 🎯 How It Works
+## Performance Metrics
 
-### Workflow
+- **Inference Latency:** < 1ms (measured via `System.nanoTime()`)
+- **Startup Time:** 2-3 seconds (includes model loading)
+- **Memory Overhead:** ~50-150MB (DJL + ONNX Runtime + model)
+- **Model Size:** ~50KB (RandomForest classifier)
 
-1. **Offline Training (Python)**
-   - Data scientist trains model using scikit-learn
-   - Model is exported to `model.onnx` using `skl2onnx`
+---
 
-2. **Build & Embedding (Maven)**
-   - `model.onnx` placed in `src/main/resources`
-   - Maven packages it inside the application JAR
+## Development
 
-3. **Runtime Initialization (Java)**
-   - On startup, `PredictionService` loads `model.onnx` from JAR resources
-   - DJL creates a reusable `Predictor` object
+### Running Tests
 
-4. **Live Inference (Java)**
-   - Business logic calls `predictionService.predict(data)`
-   - **Direct method call** - no network, no latency
-   - Returns prediction instantly
-
-### Key Implementation: Zero-Latency Inference
-
-```java
-// In App.java - Direct, in-process method call
-Javalin.create().start(7070)
-    .post("/predict", ctx -> {
-        float[] input = ctx.bodyAsClass(float[].class);
-        
-        // No HTTP, no gRPC, no network overhead
-        float[] result = predictionService.predict(input);
-        
-        ctx.json(result);
-    });
+```bash
+cd java-legacy-app
+mvn test
 ```
 
+### Retrain Model
+
+```bash
+python create_model.py
+mvn clean package
+java -jar target/java-legacy-app-1.0-SNAPSHOT.jar
+```
+
+### Using Custom Models
+
+1. Train your model in Python (scikit-learn, PyTorch, TensorFlow, etc.)
+2. Export to ONNX format
+3. Replace `model.onnx` in `src/main/resources/`
+4. Update `SimpleOnnxTranslator.java` input/output types if needed
+5. Update `PredictionService.java` class mappings
+
 ---
 
-## 💡 Use Cases
+## Use Cases
 
-This pattern is ideal for:
-
-- **Legacy Modernization** - Add AI to existing Java monoliths without rewriting
-- **Low-Latency Requirements** - Sub-millisecond inference times
-- **Embedded Systems** - Run AI on edge devices with limited connectivity
+- **Legacy System Modernization** - Add AI to existing Java applications
+- **Low-Latency Requirements** - Real-time inference with minimal overhead
+- **Edge Deployment** - Run ML on devices with limited connectivity
 - **Cost Optimization** - Eliminate separate ML infrastructure
-- **Compliance** - Keep sensitive data within existing security boundaries
+- **Regulatory Compliance** - Keep sensitive data within existing boundaries
 
 ---
 
-## 📊 Performance Characteristics
+## Workflow
 
-- **Inference Latency**: < 1ms (direct method call)
-- **Startup Time**: ~2-3 seconds (model loading)
-- **Memory Overhead**: ~50-200MB (depends on model size)
-- **Dependencies**: Only DJL and ONNX Runtime JARs
+1. **Training Phase (Python)**
+   - Data scientist trains model using scikit-learn
+   - Model exported to `model.onnx` using `skl2onnx`
 
----
+2. **Build Phase (Maven)**
+   - `model.onnx` placed in `src/main/resources/`
+   - Maven packages model inside JAR
 
-## 🤝 Target Audience
+3. **Runtime Phase (Java)**
+   - `PredictionService` loads model from JAR resources on startup
+   - DJL creates reusable `Predictor` object
 
-- **Systems Engineers** - Interested in low-latency architecture
-- **MLOps Engineers** - Exploring deployment patterns
-- **Tech Recruiters** - Evaluating full-stack ML capabilities
-- **Legacy App Maintainers** - Adding modern AI to old systems
-
----
-
-## 📝 License
-
-MIT License - Feel free to use this pattern in your projects!
+4. **Inference Phase (Java)**
+   - HTTP endpoint receives request
+   - Calls `predictionService.predict()` as direct method
+   - Returns result with sub-millisecond latency
 
 ---
 
-## 🙋 Questions?
+## License
 
-This project demonstrates a practical approach to embedding AI in legacy systems. The core principle: **sometimes the best architecture is the simplest one** - no microservices needed, just a JAR dependency and a model file.
+MIT License
 
-**Built with ❤️ to show that legacy Java apps can run modern AI without the overhead.**
+---
+
+## Summary
+
+This project demonstrates practical ML inference in legacy Java systems. The approach prioritizes simplicity: no microservices, no network calls, no operational overhead. Just a JAR dependency and an embedded model file delivering sub-millisecond predictions.
+
+This project demonstrates practical ML inference in legacy Java systems. The approach prioritizes simplicity: no microservices, no network calls, no operational overhead. Just a JAR dependency and an embedded model file delivering sub-millisecond predictions.
