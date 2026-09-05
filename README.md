@@ -14,16 +14,12 @@ This project demonstrates embedding a Python-trained machine learning model dire
 - **Legacy Compatible** - Runs on Java 11, suitable for legacy enterprise systems
 - **Simple Integration** - Model as a resource, loaded at startup
 
----
-
 ## Prerequisites
 
 - Java JDK 11 (or above)
 - Apache Maven 3.6+
 - Python 3.7+ (for model training only)
 - API testing tool (Postman, cURL, or similar)
-
----
 
 ## Build and Run
 
@@ -49,8 +45,6 @@ java -jar target/java-embedded-ml-1.0-SNAPSHOT.jar
 ```
 
 Server starts at `http://localhost:7070`
-
----
 
 ## API Endpoints
 
@@ -90,16 +84,12 @@ curl -X POST http://localhost:7070/predict \
   -d '{"sepal_length":5.1,"sepal_width":3.5,"petal_length":1.4,"petal_width":0.2}'
 ```
 
----
-
 ## GET `/health`
 Check service status and model information.
 
 ## GET `/test`
 Run test with known samples.
 
-
----
 
 ## Testing with Postman
 
@@ -125,8 +115,6 @@ Run test with known samples.
    - URL: `http://localhost:7070/health`
    - Method: GET
 
----
-
 ## Project Structure
 
 ```
@@ -150,8 +138,6 @@ JAVA_EMBEDDED_ML/
 └── .gitignore
 ```
 
----
-
 ## Technology Stack
 
 | Component | Technology | Purpose |
@@ -163,8 +149,6 @@ JAVA_EMBEDDED_ML/
 | **Model Format** | ONNX | Universal ML model format |
 | **Training** | Python + scikit-learn | Model development |
 
----
-
 ## Performance Metrics
 
 - **Inference Latency:** < 1ms (measured via `System.nanoTime()`)
@@ -172,7 +156,6 @@ JAVA_EMBEDDED_ML/
 - **Memory Overhead:** ~50-150MB (DJL + ONNX Runtime + model)
 - **Model Size:** ~50KB (RandomForest classifier)
 
----
 
 ## Development
 
@@ -199,7 +182,6 @@ java -jar target/java-legacy-app-1.0-SNAPSHOT.jar
 4. Update `SimpleOnnxTranslator.java` input/output types if needed
 5. Update `PredictionService.java` class mappings
 
----
 
 ## Use Cases
 
@@ -208,8 +190,6 @@ java -jar target/java-legacy-app-1.0-SNAPSHOT.jar
 - **Edge Deployment** - Run ML on devices with limited connectivity
 - **Cost Optimization** - Eliminate separate ML infrastructure
 - **Regulatory Compliance** - Keep sensitive data within existing boundaries
-
----
 
 ## Workflow
 
@@ -230,13 +210,10 @@ java -jar target/java-legacy-app-1.0-SNAPSHOT.jar
    - Calls `predictionService.predict()` as direct method
    - Returns result with sub-millisecond latency
 
----
 
 ## License
 
 MIT License
-
----
 
 ## Summary
 
